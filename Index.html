@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pradip Payment Gateway</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-sky-100 via-sky-200 to-blue-200 text-slate-800 antialiased min-h-screen flex flex-col items-center justify-start p-3 sm:p-6">
+
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col min-h-[92vh] sm:min-h-[88vh] relative border border-sky-200">
+
+        <!-- VIEW 1: HOME / WELCOME VIEW -->
+        <div id="homeView" class="flex flex-col flex-grow p-6 justify-between">
+            <div class="flex flex-col items-center pt-8">
+                <div class="w-20 h-20 bg-gradient-to-tr from-sky-600 to-blue-600 rounded-3xl flex items-center justify-center text-white text-3xl shadow-lg mb-6 shadow-sky-300">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <h1 class="text-3xl font-extrabold text-slate-900 mb-2 text-center">Pradip Payment Gateway</h1>
+                <p class="text-sm text-slate-500 mb-8 text-center px-4">Manage multi-person accounts, credit & debit transaction ledgers securely.</p>
+                
+                <div class="w-full bg-sky-50 border border-sky-100 rounded-2xl p-5 text-center mb-6">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-sky-600 block mb-1">Welcome Portal</span>
+                    <p class="text-xs text-slate-600">Tap below to view all saved persons or add a new account.</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 pb-4">
+                <button onclick="switchView('personsView')" class="w-full py-4 bg-sky-600 hover:bg-sky-700 active:scale-[0.99] text-white font-semibold rounded-2xl shadow-lg shadow-sky-200 transition-all flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-users text-sm"></i>
+                    <span>View All History / Persons</span>
+                </button>
+                <button onclick="openAddPersonModal()" class="w-full py-4 bg-white hover:bg-sky-50 active:scale-[0.99] text-sky-700 font-semibold rounded-2xl border border-sky-200 shadow-sm transition-all flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-user-plus text-sm"></i>
+                    <span>Add New Person</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- VIEW 2: PERSONS LIST / HISTORY VIEW -->
+        <div id="personsView" class="flex flex-col flex-grow hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-sky-600 to-blue-700 text-white p-5 pt-6 pb-6 rounded-b-[2rem] shadow-md flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <button onclick="switchView('homeView')" class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white text-xs transition-all border border-white/20">
+                        <i class="fa-solid fa-house"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-base font-semibold leading-tight">All Persons & History</h2>
+                        <p class="text-xs text-sky-200" id="totalPersonsCount">0 accounts saved</p>
+                    </div>
+                </div>
+                <button onclick="openAddPersonModal()" class="px-3.5 py-2 bg-white text-sky-700 font-semibold rounded-xl text-xs shadow hover:bg-sky-50 transition-all flex items-center space-x-1.5">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Add Person</span>
+                </button>
+            </div>
+
+            <!-- Search bar -->
+            <div class="px-5 mt-4">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </span>
+                    <input type="text" id="personSearchInput" oninput="filterPersonsList()" placeholder="Search person by name or phone..."
+                        class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all">
+                </div>
+            </div>
+
+            <!-- Persons List Container -->
+            <div id="personsListContainer" class="px-5 mt-3 flex-grow overflow-y-auto space-y-3 pb-6 max-h-[460px]">
+                <!-- Dynamically rendered persons -->
+            </div>
+        </div>
+
+        <!-- VIEW 3: INDIVIDUAL PERSON LEDGER VIEW -->
+        <div id="personLedgerView" class="flex flex-col flex-grow hidden">
+            <!-- Header Section -->
+            <div class="bg-gradient-to-r from-sky-600 to-blue-700 text-white p-5 pt-6 pb-6 rounded-b-[2rem] shadow-md relative">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <button onclick="switchView('personsView')" class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white text-xs transition-all border border-white/20">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <div class="w-11 h-11 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white font-bold text-lg border border-white/20" id="ledgerUserAvatar">
+                            P
+                        </div>
+                        <div class="overflow-hidden">
+                            <h2 class="text-base font-semibold leading-tight truncate max-w-[180px]" id="ledgerUserName">Person Name</h2>
+                            <p class="text-xs text-sky-200" id="ledgerUserPhone">+91 00000 00000</p>
+                        </div>
+                    </div>
+                    <button onclick="openEditPersonModal()" class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white text-xs transition-all border border-white/20" title="Edit Person">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                </div>
+
+                <!-- Balance Card -->
+                <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 flex flex-col justify-center">
+                    <span class="text-xs font-medium text-sky-100 uppercase tracking-wider mb-1">Net Balance Ledger</span>
+                    <div class="text-3xl font-extrabold tracking-tight" id="ledgerBalanceDisplay">₹0.00</div>
+                </div>
+            </div>
+
+            <!-- Action Buttons Grid (Credit Green & Debit Red) -->
+            <div class="grid grid-cols-2 gap-3 px-5 -mt-4 relative z-10">
+                <!-- Credit Button (Green) -->
+                <button onclick="openTransactionModal('credit')" class="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white p-4 rounded-2xl shadow-lg shadow-emerald-200 flex flex-col items-center justify-center transition-all group border border-emerald-500">
+                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-white mb-2 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-arrow-down text-lg"></i>
+                    </div>
+                    <span class="font-bold text-sm">CREDIT</span>
+                    <span class="text-[10px] text-emerald-100 font-medium">+ Add Money</span>
+                </button>
+
+                <!-- Debit Button (Red) -->
+                <button onclick="openTransactionModal('debit')" class="bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white p-4 rounded-2xl shadow-lg shadow-rose-200 flex flex-col items-center justify-center transition-all group border border-rose-500">
+                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-white mb-2 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-arrow-up text-lg"></i>
+                    </div>
+                    <span class="font-bold text-sm">DEBIT</span>
+                    <span class="text-[10px] text-rose-100 font-medium">- Send / Spent</span>
+                </button>
+            </div>
+
+            <!-- Transaction History Header & Badge -->
+            <div class="px-5 mt-6 mb-3 flex items-center justify-between">
+                <h3 class="font-bold text-sm text-slate-800 uppercase tracking-wider flex items-center space-x-2">
+                    <i class="fa-solid fa-clock-rotate-left text-sky-600"></i>
+                    <span>Person Transactions</span>
+                </h3>
+                <span class="text-xs bg-sky-100 text-sky-800 font-semibold px-2.5 py-1 rounded-full" id="ledgerTxCountBadge">0 txns</span>
+            </div>
+
+            <!-- Transaction List Container -->
+            <div id="ledgerTransactionListContainer" class="px-5 flex-grow overflow-y-auto space-y-3 pb-6 max-h-[340px]">
+                <!-- Dynamically populated transaction items -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL: ADD NEW PERSON -->
+    <div id="addPersonModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl transform transition-all">
+            <div class="p-5 bg-sky-50 border-b border-sky-100 flex items-center justify-between">
+                <h3 class="font-bold text-base text-slate-900 flex items-center space-x-2">
+                    <i class="fa-solid fa-user-plus text-sky-600"></i>
+                    <span>Add New Person</span>
+                </h3>
+                <button onclick="closeAddPersonModal()" class="w-8 h-8 rounded-full bg-sky-200 hover:bg-sky-300 flex items-center justify-center text-slate-700 transition-colors">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <form id="addPersonForm" onsubmit="handlePersonSubmit(event)" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Full Name</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-regular fa-user"></i>
+                        </span>
+                        <input type="text" id="newPersonName" required placeholder="e.g. Rahul Sharma"
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Mobile Number</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-phone"></i>
+                        </span>
+                        <input type="tel" id="newPersonPhone" required pattern="[0-9]{10,15}" placeholder="e.g. 9876543210"
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all">
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-3.5 bg-sky-600 hover:bg-sky-700 active:scale-[0.99] text-white font-semibold rounded-xl shadow-lg shadow-sky-200 transition-all flex items-center justify-center space-x-2">
+                        <span>Save Person & Open Ledger</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT PERSON -->
+    <div id="editPersonModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl transform transition-all">
+            <div class="p-5 bg-sky-50 border-b border-sky-100 flex items-center justify-between">
+                <h3 class="font-bold text-base text-slate-900">Edit Person Details</h3>
+                <button onclick="closeEditPersonModal()" class="w-8 h-8 rounded-full bg-sky-200 hover:bg-sky-300 flex items-center justify-center text-slate-700 transition-colors">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <form id="editPersonForm" onsubmit="handleEditPersonSubmit(event)" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Full Name</label>
+                    <input type="text" id="editPersonNameInput" required
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Mobile Number</label>
+                    <input type="tel" id="editPersonPhoneInput" required pattern="[0-9]{10,15}"
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all">
+                </div>
+
+                <div class="pt-2 flex space-x-2">
+                    <button type="button" onclick="deleteCurrentPerson()" class="w-1/3 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold rounded-xl text-xs transition-all flex items-center justify-center space-x-1">
+                        <i class="fa-solid fa-trash"></i>
+                        <span>Delete</span>
+                    </button>
+                    <button type="submit" class="w-2/3 py-3 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-xl text-xs shadow-lg shadow-sky-200 transition-all flex items-center justify-center">
+                        Update Details
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT TRANSACTION -->
+    <div id="transactionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl transform transition-all animate-in fade-in zoom-in-95 duration-200">
+            <div class="p-5 bg-sky-50 border-b border-sky-100 flex items-center justify-between">
+                <h3 id="modalTitle" class="font-bold text-base text-slate-900 flex items-center space-x-2">
+                    <span id="modalTypeIcon" class="w-3 h-3 rounded-full"></span>
+                    <span id="modalTitleText">New Transaction</span>
+                </h3>
+                <button onclick="closeTransactionModal()" class="w-8 h-8 rounded-full bg-sky-200 hover:bg-sky-300 flex items-center justify-center text-slate-700 transition-colors">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <form id="transactionForm" onsubmit="handleTransactionSubmit(event)" class="p-5 space-y-4">
+                <input type="hidden" id="editTxId">
+                <input type="hidden" id="txType">
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Amount (₹)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 font-bold">₹</span>
+                        <input type="number" step="0.01" min="0.01" id="txAmount" required placeholder="0.00"
+                            class="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-lg font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Description / Note</label>
+                    <input type="text" id="txNote" required placeholder="e.g. Payment for service, groceries..."
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all">
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" id="txSubmitBtn" class="w-full py-3.5 bg-sky-600 hover:bg-sky-700 active:scale-[0.99] text-white font-semibold rounded-xl shadow-lg shadow-sky-200 transition-all flex items-center justify-center space-x-2">
+                        <span>Save Transaction</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        // Storage Key for Permanent localStorage persistence
+        const STORAGE_KEY_DATA = 'pradip_gateway_persons_data';
+
+        // Application State
+        let persons = []; // Array of person objects { id, name, phone, transactions: [] }
+        let currentActivePersonId = null;
+
+        // Initialize App on DOM Load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            switchView('homeView');
+        });
+
+        // Load data from localStorage
+        function loadData() {
+            const stored = localStorage.getItem(STORAGE_KEY_DATA);
+            if (stored) {
+                try {
+                    persons = JSON.parse(stored);
+                } catch (e) {
+                    persons = [];
+                }
+            } else {
+                persons = [];
+            }
+        }
+
+        // Save data to localStorage (permanent)
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(persons));
+        }
+
+        // View Switcher helper
+        function switchView(viewId) {
+            document.getElementById('homeView').classList.add('hidden');
+            document.getElementById('personsView').classList.add('hidden');
+            document.getElementById('personLedgerView').classList.add('hidden');
+
+            document.getElementById(viewId).classList.remove('hidden');
+
+            if (viewId === 'personsView') {
+                renderPersonsList();
+            } else if (viewId === 'personLedgerView') {
+                renderLedger();
+            }
+        }
+
+        // --- Person Management ---
+        function openAddPersonModal() {
+            document.getElementById('newPersonName').value = '';
+            document.getElementById('newPersonPhone').value = '';
+            document.getElementById('addPersonModal').classList.remove('hidden');
+        }
+
+        function closeAddPersonModal() {
+            document.getElementById('addPersonModal').classList.add('hidden');
+        }
+
+        function handlePersonSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('newPersonName').value.trim();
+            const phone = document.getElementById('newPersonPhone').value.trim();
+
+            if (!name || !phone) return;
+
+            const newPerson = {
+                id: 'person_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+                name: name,
+                phone: phone,
+                transactions: []
+            };
+
+            persons.push(newPerson);
+            saveData();
+            closeAddPersonModal();
+
+            // Open ledger for this newly created person directly
+            currentActivePersonId = newPerson.id;
+            switchView('personLedgerView');
+        }
+
+        function openEditPersonModal() {
+            const person = persons.find(p => p.id === currentActivePersonId);
+            if (!person) return;
+            document.getElementById('editPersonNameInput').value = person.name;
+            document.getElementById('editPersonPhoneInput').value = person.phone;
+            document.getElementById('editPersonModal').classList.remove('hidden');
+        }
+
+        function closeEditPersonModal() {
+            document.getElementById('editPersonModal').classList.add('hidden');
+        }
+
+        function handleEditPersonSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('editPersonNameInput').value.trim();
+            const phone = document.getElementById('editPersonPhoneInput').value.trim();
+
+            const person = persons.find(p => p.id === currentActivePersonId);
+            if (person && name && phone) {
+                person.name = name;
+                person.phone = phone;
+                saveData();
+                closeEditPersonModal();
+                renderLedger();
+            }
+        }
+
+        function deleteCurrentPerson() {
+            if (confirm("Are you sure you want to delete this person and all associated transaction history?")) {
+                persons = persons.filter(p => p.id !== currentActivePersonId);
+                saveData();
+                closeEditPersonModal();
+                switchView('personsView');
+            }
+        }
+
+        // Render Persons List (History overview)
+        function renderPersonsList(filteredList = null) {
+            const container = document.getElementById('personsListContainer');
+            const countBadge = document.getElementById('totalPersonsCount');
+            const listToRender = filteredList || persons;
+
+            countBadge.textContent = `${persons.length} account${persons.length === 1 ? '' : 's'} saved`;
+
+            if (listToRender.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-16 text-center text-slate-400">
+                        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-2xl mb-3 text-slate-300">
+                            <i class="fa-solid fa-users-slash"></i>
+                        </div>
+                        <p class="font-semibold text-slate-600 text-sm">No persons found</p>
+                        <p class="text-xs text-slate-400 mt-1">Tap 'Add Person' to create a new ledger account.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            listToRender.forEach(p => {
+                // Calculate net balance for person
+                let netBalance = 0;
+                p.transactions.forEach(tx => {
+                    if (tx.type === 'credit') netBalance += parseFloat(tx.amount);
+                    else netBalance -= parseFloat(tx.amount);
+                });
+
+                const balanceColor = netBalance < 0 ? 'text-rose-600' : 'text-blue-600';
+
+                html += `
+                    <div onclick="selectPerson('${p.id}')" class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-sky-200 transition-all cursor-pointer flex items-center justify-between group">
+                        <div class="flex items-center space-x-3.5 overflow-hidden">
+                            <div class="w-12 h-12 bg-sky-100 text-sky-700 rounded-2xl flex items-center justify-center font-bold text-lg flex-shrink-0 group-hover:bg-sky-600 group-hover:text-white transition-colors">
+                                ${p.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="overflow-hidden">
+                                <h4 class="font-bold text-slate-900 text-sm truncate">${escapeHtml(p.name)}</h4>
+                                <p class="text-xs text-slate-400 font-medium">${escapeHtml(p.phone)}</p>
+                                <span class="text-[10px] text-slate-500 font-semibold bg-slate-100 px-2 py-0.5 rounded-md inline-block mt-1">${p.transactions.length} txns</span>
+                            </div>
+                        </div>
+
+                        <div class="text-right flex-shrink-0 pl-2">
+                            <span class="font-extrabold text-sm ${balanceColor} block">
+                                ₹${netBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Net Balance</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Filter persons search
+        function filterPersonsList() {
+            const query = document.getElementById('personSearchInput').value.toLowerCase().trim();
+            if (!query) {
+                renderPersonsList();
+                return;
+            }
+            const filtered = persons.filter(p => p.name.toLowerCase().includes(query) || p.phone.includes(query));
+            renderPersonsList(filtered);
+        }
+
+        function selectPerson(id) {
+            currentActivePersonId = id;
+            switchView('personLedgerView');
+        }
+
+        // --- Individual Ledger & Transactions ---
+        function renderLedger() {
+            const person = persons.find(p => p.id === currentActivePersonId);
+            if (!person) return;
+
+            document.getElementById('ledgerUserName').textContent = person.name;
+            document.getElementById('ledgerUserPhone').textContent = person.phone;
+            document.getElementById('ledgerUserAvatar').textContent = person.name.charAt(0).toUpperCase();
+
+            // Calculate balance
+            let balance = 0;
+            person.transactions.forEach(tx => {
+                if (tx.type === 'credit') balance += parseFloat(tx.amount);
+                else balance -= parseFloat(tx.amount);
+            });
+
+            const balanceEl = document.getElementById('ledgerBalanceDisplay');
+            balanceEl.textContent = `₹${balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            balanceEl.className = balance < 0 ? "text-3xl font-extrabold tracking-tight text-rose-300" : "text-3xl font-extrabold tracking-tight text-white";
+
+            renderLedgerTransactions();
+        }
+
+        function renderLedgerTransactions() {
+            const person = persons.find(p => p.id === currentActivePersonId);
+            if (!person) return;
+
+            const container = document.getElementById('ledgerTransactionListContainer');
+            const badge = document.getElementById('ledgerTxCountBadge');
+            badge.textContent = `${person.transactions.length} txns`;
+
+            if (person.transactions.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-10 text-center text-slate-400">
+                        <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center text-xl mb-3 text-slate-300">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                        <p class="font-semibold text-slate-600 text-sm">No transactions yet</p>
+                        <p class="text-xs text-slate-400 mt-1">Tap Credit or Debit above to record payments.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            // Sort newest first
+            const sorted = [...person.transactions].sort((a, b) => new Date(b.rawTimestamp) - new Date(a.rawTimestamp));
+
+            sorted.forEach(tx => {
+                const isCredit = tx.type === 'credit';
+                const sign = isCredit ? '+' : '-';
+                const amountColorClass = isCredit ? 'text-blue-600' : 'text-rose-600';
+                const iconBgClass = isCredit ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600';
+                const iconClass = isCredit ? 'fa-arrow-down' : 'fa-arrow-up';
+
+                html += `
+                    <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex items-center justify-between group">
+                        <div class="flex items-center space-x-3 overflow-hidden">
+                            <div class="w-10 h-10 rounded-xl ${iconBgClass} flex items-center justify-center flex-shrink-0 text-sm font-bold shadow-sm">
+                                <i class="fa-solid ${iconClass}"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                                <h4 class="font-semibold text-slate-900 text-sm truncate">${escapeHtml(tx.note)}</h4>
+                                <div class="text-[11px] font-medium mt-0.5 flex flex-wrap items-center gap-1">
+                                    ${tx.multicolorTimestamp}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2.5 flex-shrink-0">
+                            <div class="text-right">
+                                <span class="font-bold text-sm ${amountColorClass} block">
+                                    ${sign}₹${parseFloat(tx.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                                <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">${tx.type}</span>
+                            </div>
+
+                            <div class="flex items-center space-x-1 border-l border-slate-100 pl-2">
+                                <button onclick="editTransaction('${tx.id}')" class="w-7 h-7 rounded-lg bg-slate-50 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 flex items-center justify-center transition-colors" title="Edit">
+                                    <i class="fa-solid fa-pen text-xs"></i>
+                                </button>
+                                <button onclick="deleteTransaction('${tx.id}')" class="w-7 h-7 rounded-lg bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors" title="Delete">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Modal for Credit or Debit
+        function openTransactionModal(type, existingTx = null) {
+            const modal = document.getElementById('transactionModal');
+            const modalTitleText = document.getElementById('modalTitleText');
+            const modalTypeIcon = document.getElementById('modalTypeIcon');
+            const txTypeInput = document.getElementById('txType');
+            const editTxIdInput = document.getElementById('editTxId');
+            const amountInput = document.getElementById('txAmount');
+            const noteInput = document.getElementById('txNote');
+            const submitBtn = document.getElementById('txSubmitBtn');
+
+            modal.classList.remove('hidden');
+            txTypeInput.value = type;
+
+            if (existingTx) {
+                modalTitleText.textContent = `Edit ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+                editTxIdInput.value = existingTx.id;
+                amountInput.value = existingTx.amount;
+                noteInput.value = existingTx.note;
+                submitBtn.textContent = 'Update Transaction';
+            } else {
+                modalTitleText.textContent = `New ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+                editTxIdInput.value = '';
+                amountInput.value = '';
+                noteInput.value = '';
+                submitBtn.textContent = 'Save Transaction';
+            }
+
+            modalTypeIcon.className = type === 'credit' ? 'w-3 h-3 rounded-full bg-emerald-500' : 'w-3 h-3 rounded-full bg-rose-500';
+        }
+
+        function closeTransactionModal() {
+            document.getElementById('transactionModal').classList.add('hidden');
+        }
+
+        // Multi-colored timestamp generator
+        function generateMultiColorTimestamp(dateObj) {
+            const optionsDate = { day: 'numeric', month: 'short', year: 'numeric' };
+            const optionsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+            
+            const dateStr = dateObj.toLocaleDateString('en-US', optionsDate);
+            const timeStr = dateObj.toLocaleTimeString('en-US', optionsTime);
+
+            return `
+                <span class="text-indigo-600 font-semibold">${dateStr}</span>
+                <span class="text-slate-300">•</span>
+                <span class="text-emerald-600 font-bold">${timeStr.split(' ')[0]}</span>
+                <span class="text-purple-600 font-semibold">${timeStr.split(' ')[1] || ''}</span>
+            `;
+        }
+
+        function handleTransactionSubmit(e) {
+            e.preventDefault();
+            const person = persons.find(p => p.id === currentActivePersonId);
+            if (!person) return;
+
+            const type = document.getElementById('txType').value;
+            const editId = document.getElementById('editTxId').value;
+            const amount = document.getElementById('txAmount').value;
+            const note = document.getElementById('txNote').value;
+
+            if (!amount || !note) return;
+
+            const now = new Date();
+            const multicolorTimestamp = generateMultiColorTimestamp(now);
+
+            if (editId) {
+                const tx = person.transactions.find(t => t.id === editId);
+                if (tx) {
+                    tx.amount = amount;
+                    tx.note = note;
+                    tx.type = type;
+                    tx.rawTimestamp = now.toISOString();
+                    tx.multicolorTimestamp = multicolorTimestamp;
+                }
+            } else {
+                const newTx = {
+                    id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+                    type: type,
+                    amount: amount,
+                    note: note,
+                    rawTimestamp: now.toISOString(),
+                    multicolorTimestamp: multicolorTimestamp
+                };
+                person.transactions.push(newTx);
+            }
+
+            saveData();
+            closeTransactionModal();
+            renderLedger();
+        }
+
+        function editTransaction(id) {
+            const person = persons.find(p => p.id === currentActivePersonId);
+            if (!person) return;
+            const tx = person.transactions.find(t => t.id === id);
+            if (tx) {
+                openTransactionModal(tx.type, tx);
+            }
+        }
+
+        function deleteTransaction(id) {
+            if (confirm("Are you sure you want to delete this transaction record?")) {
+                const person = persons.find(p => p.id === currentActivePersonId);
+                if (person) {
+                    person.transactions = person.transactions.filter(t => t.id !== id);
+                    saveData();
+                    renderLedger();
+                }
+            }
+        }
+
+        // Helper for safe HTML escaping
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+    </script>
+</body>
+</html>
